@@ -70,7 +70,7 @@ export default async function server(
         image: imagePath as string,
         description: profileInfo.description,
         properties: {
-          username: profileInfo.id,
+          username: profileInfo.username,
           link: profileInfo.url,
         },
       },

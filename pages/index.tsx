@@ -10,13 +10,21 @@ import {
   useNFTs,
   useSigner,
 } from "@thirdweb-dev/react";
-import { ChainId, NFTCollection, ThirdwebSDK } from "@thirdweb-dev/sdk";
+import {
+  ChainId,
+  NFTCollection,
+  NFTMetadataOwner,
+  ThirdwebSDK,
+} from "@thirdweb-dev/sdk";
 import axios from "axios";
 import type { NextPage } from "next";
 import { signIn, signOut, useSession } from "next-auth/react";
 import styles from "./styles/Home.module.css";
 import { SiTwitter } from "react-icons/si";
 import { BsFillLightningChargeFill } from "react-icons/bs";
+import { useEffect, useMemo, useState } from "react";
+
+type NftData = { id: string; metadataOwner: NFTMetadataOwner };
 
 function getBase64(url: string) {
   return axios
@@ -30,16 +38,34 @@ const Home: NextPage = () => {
   // Helpful thirdweb hooks to connect and manage the wallet from metamask.
   const address = useAddress();
   const connectWithMetamask = useMetamask();
-  const disconnectWallet = useDisconnect();
   const signer = useSigner();
   const isOnWrongNetwork = useNetworkMismatch();
   const [, switchNetwork] = useNetwork();
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
+  const [isMinted, setIsMinted] = useState(false);
+  const [nftData, setNftData] = useState<NftData>();
 
   // Fetch the NFT collection from thirdweb via it's contract address.
-  const { contract } = useContract<NFTCollection>(
-    process.env.NEXT_PUBLIC_NFT_COLLECTION_ADDRESS
-  );
+  const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_NFT_COLLECTION_ADDRESS;
+  const { contract } = useContract<NFTCollection>(CONTRACT_ADDRESS);
+
+  const getIsMinted = async () => {
+    if (contract && address) {
+      const hasMinted = (await contract.balanceOf(address)).gt(0);
+      setIsMinted(hasMinted);
+      if (hasMinted) {
+        const nfts = await contract.getOwned(address);
+        const ids = await contract.getOwnedTokenIds(address);
+        setNftData({
+          id: ids[0].toString(),
+          metadataOwner: nfts[0],
+        });
+      }
+    }
+  };
+  useEffect(() => {
+    getIsMinted();
+  }, [contract, address]);
 
   const { data: nfts, isLoading: loadingNfts } = useNFTs(contract);
 
@@ -132,44 +158,115 @@ const Home: NextPage = () => {
 
   const TwitterButton = () => {
     return (
-      <a
-        onClick={signInWithTwitter}
-        className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
-      >
-        <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
-        <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
-        <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
-        <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
-        <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
-        <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
-        <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
+      <>
+        {session && session.user && session.user.image ? (
+          <a
+            onClick={() => signOut()}
+            className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
+          >
+            <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
+            <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
+            <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
+            <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
+            <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
+            <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
+            <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
 
-        <div className="inline-flex items-center">
-          <SiTwitter />
-          <span className="relative pl-4">Sign in</span>
-        </div>
-      </a>
+            <div className="inline-flex items-center text-red-500 hover:text-white">
+              <SiTwitter />
+              <span className=" relative pl-4">Sign out</span>
+            </div>
+          </a>
+        ) : (
+          <a
+            onClick={signInWithTwitter}
+            className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
+          >
+            <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
+            <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
+            <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
+            <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
+            <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
+            <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
+            <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
+
+            <div className="inline-flex items-center">
+              <SiTwitter />
+              <span className="relative pl-4">Sign in</span>
+            </div>
+          </a>
+        )}
+      </>
     );
   };
   const ConvertButton = () => {
-    return (
-      <a
-        onClick={mintWithSignature}
-        className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
-      >
-        <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
-        <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
-        <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
-        <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
-        <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
-        <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
-        <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
+    if (isMinted) {
+      return (
+        <>
+          <a
+            // href={`https://opensea.io/assets/matic/${CONTRACT_ADDRESS}/${nftData?.id}`}
+            href="https://twitter.com/giovannifulin"
+            target="_blank"
+            rel="noreferrer"
+            className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
+          >
+            <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
+            <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
+            <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
+            <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
+            <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
+            <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
+            <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
 
-        <div className="inline-flex items-center">
-          <BsFillLightningChargeFill />
-          <span className="relative pl-4">Convert</span>
-        </div>
-      </a>
+            <div className="inline-flex items-center">
+              <BsFillLightningChargeFill />
+              <span className="relative pl-4">Follow Me</span>
+            </div>
+          </a>
+        </>
+      );
+    }
+
+    return (
+      <>
+        {address ? (
+          <a
+            onClick={mintWithSignature}
+            className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
+          >
+            <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
+            <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
+            <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
+            <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
+            <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
+            <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
+            <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
+
+            <div className="inline-flex items-center">
+              <BsFillLightningChargeFill />
+              <span className="relative pl-4">Convert</span>
+            </div>
+          </a>
+        ) : (
+          <a
+            onClick={connectWithMetamask}
+            className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
+          >
+            <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
+            <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
+            <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
+            <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
+            <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
+            <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
+            <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
+
+            <div className="inline-flex items-center">
+              <BsFillLightningChargeFill />
+              <span className="relative pl-4">Connect Metamask</span>
+            </div>
+          </a>
+        )}
+      </>
     );
   };
 
@@ -180,6 +277,97 @@ const Home: NextPage = () => {
           ? session.user.name
           : "Your name"}
       </p>
+    );
+  };
+
+  const PreProfile = () => {
+    return (
+      <>
+        <h2 className=" bg-gradient-to-br from-pink-500 to-purple-800 bg-clip-text pb-12 text-3xl font-bold tracking-tight  text-transparent sm:text-4xl">
+          1. Connect
+        </h2>
+        {session && session.user && session.user.image ? (
+          <div className="w-full items-center py-8">
+            <img
+              className="inline-block h-40 w-40 rounded-full ring-2 ring-pink-500 ring-offset-2 ring-offset-white"
+              src={session.user.image}
+              alt=""
+            />
+          </div>
+        ) : (
+          <div className="w-full items-center py-8">
+            <img
+              className="inline-block h-40 w-40 rounded-full ring-2 ring-white"
+              src="/avatars.gif"
+              alt=""
+            />
+          </div>
+        )}
+
+        <Username />
+
+        <div className="pt-6">
+          <TwitterButton />
+        </div>
+      </>
+    );
+  };
+
+  const PostProfile = () => {
+    return (
+      <>
+        <h2 className=" bg-gradient-to-br from-yellow-500 to-green-800 bg-clip-text pb-12 text-3xl font-bold tracking-tight  text-transparent sm:text-4xl">
+          2. Convert
+        </h2>
+        {isMinted && nftData ? (
+          <div className="w-full items-center py-8">
+            <div>
+              <ThirdwebNftMedia
+                metadata={nftData.metadataOwner.metadata}
+                style={{
+                  height: 90,
+                  borderRadius: 16,
+                }}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="w-full items-center py-8">
+            <img
+              className="mask mask-hexagon inline-block h-40 w-40"
+              src="/unknown.jpg"
+              alt=""
+            />
+          </div>
+        )}
+
+        <Username />
+
+        <div className="pt-6">
+          {session && session.user && session.user.image ? (
+            <ConvertButton />
+          ) : (
+            // Disabled
+            <a
+              onClick={mintWithSignature}
+              className="group pointer-events-none relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-gray-700 shadow-2xl disabled:opacity-25"
+            >
+              <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
+              <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
+              <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
+              <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
+              <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
+              <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
+              <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
+
+              <div className="inline-flex items-center">
+                <BsFillLightningChargeFill />
+                <span className="relative pl-4">Convert</span>
+              </div>
+            </a>
+          )}
+        </div>
+      </>
     );
   };
 
@@ -201,7 +389,6 @@ const Home: NextPage = () => {
                   </a>
                 </div>
               </div>
-
               <div>
                 <ConnectWallet />
               </div>
@@ -216,135 +403,15 @@ const Home: NextPage = () => {
           <div className="flex flex-row gap-36 bg-connect-animation bg-[length:70%_30%] bg-center bg-no-repeat">
             <div className="flex flex-shrink-0">
               <div className="flex flex-col">
-                <h2 className=" bg-gradient-to-br from-pink-500 to-purple-800 bg-clip-text pb-12 text-3xl font-bold tracking-tight  text-transparent sm:text-4xl">
-                  1. Connect
-                </h2>
-                <div className="w-full items-center py-8">
-                  <img
-                    className="inline-block h-40 w-40 rounded-full ring-2 ring-white"
-                    src="https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                    alt=""
-                  />
-                </div>
-                <Username />
-                <div className="pt-6">
-                  <TwitterButton />
-                  <a className={styles.mainButton} onClick={() => signOut()}>
-                    Sign out
-                  </a>
-                </div>
+                <PreProfile />
               </div>
             </div>
             <div className="flex flex-shrink-0">
               <div className="flex flex-col">
-                <h2 className=" bg-gradient-to-br from-yellow-500 to-green-800 bg-clip-text pb-12 text-3xl font-bold tracking-tight  text-transparent sm:text-4xl">
-                  2. Convert
-                </h2>
-                <div className="w-full items-center py-8">
-                  <img
-                    className="inline-block h-40 w-40 rounded-full ring-2 ring-white"
-                    src="https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                    alt=""
-                  />
-                </div>
-                <Username />
-
-                <div className="pt-6">
-                  {address ? (
-                    <ConvertButton />
-                  ) : (
-                    <a
-                      className={styles.mainButton}
-                      onClick={connectWithMetamask}
-                    >
-                      Connect Wallet
-                    </a>
-                  )}
-                </div>
+                <PostProfile />
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      <div className={styles.container}>
-        {/* Twitter */}
-        <h1 className={styles.h1}>Twitter</h1>
-        <button onClick={getSes}>getSes</button>
-        <a className={styles.mainButton} onClick={signInWithTwitter}>
-          signInWithTwitter
-        </a>
-
-        <h3 className="mt-3 text-lg text-white">
-          Welcome {session && session.user && session.user.name}
-        </h3>
-        <h3 className="mt-3 text-lg text-white">
-          You are signed in as {session && session.user && session.user.email}
-        </h3>
-        <a className={styles.mainButton} onClick={() => console.log(session)}>
-          Log session
-        </a>
-
-        {/* Top Section */}
-
-        <hr className={styles.divider} />
-
-        <div style={{ marginTop: 24 }}>
-          {address ? (
-            <a className={styles.mainButton} onClick={mintWithSignature}>
-              Mint NFT
-            </a>
-          ) : (
-            <a className={styles.mainButton} onClick={connectWithMetamask}>
-              Connect Wallet
-            </a>
-          )}
-        </div>
-        <hr className={styles.smallDivider} />
-        <div className={styles.collectionContainer}>
-          <h2 className={styles.ourCollection}>
-            Other NFTs in this collection:
-          </h2>
-
-          {loadingNfts ? (
-            <p>Loading...</p>
-          ) : (
-            <div className={styles.nftGrid}>
-              {nfts?.map((nft) => (
-                <div
-                  className={styles.nftItem}
-                  key={nft.metadata.id.toString()}
-                >
-                  <div>
-                    <ThirdwebNftMedia
-                      metadata={nft.metadata}
-                      style={{
-                        height: 90,
-                        borderRadius: 16,
-                      }}
-                    />
-                  </div>
-                  <div style={{ textAlign: "center" }}>
-                    <p>Named</p>
-                    <p>
-                      <b>{nft.metadata.name}</b>
-                    </p>
-                  </div>
-
-                  <div style={{ textAlign: "center" }}>
-                    <p>Owned by</p>
-                    <p>
-                      <b>
-                        {nft.owner
-                          .slice(0, 6)
-                          .concat("...")
-                          .concat(nft.owner.slice(-4))}
-                      </b>
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </>
