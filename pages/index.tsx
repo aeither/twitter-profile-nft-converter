@@ -20,7 +20,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { BsFillLightningChargeFill } from "react-icons/bs";
 import { SiTwitter } from "react-icons/si";
-import { DESIRED_CHAIN_ID } from "./utils/constants";
+import { DESIRED_CHAIN_ID } from "../utils/constants";
 
 type NftData = { id: string; metadataOwner: NFTMetadataOwner };
 

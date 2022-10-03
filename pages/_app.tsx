@@ -4,7 +4,7 @@ import type { AppProps as NextAppProps } from "next/app";
 import Head from "next/head";
 import ThirdwebGuideFooter from "../components/guide/ThirdwebGuideFooter";
 import "./styles/globals.css";
-import { DESIRED_CHAIN_ID } from "./utils/constants";
+import { DESIRED_CHAIN_ID } from "../utils/constants";
 
 type AppProps<P = any> = {
   pageProps: P;
