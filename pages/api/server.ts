@@ -1,6 +1,7 @@
 import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getToken } from "next-auth/jwt";
+import { DESIRED_CHAIN_NAME } from "../../utils/constants";
 import "../styles/globals.css";
 
 type ProfileInfo = {
@@ -29,7 +30,7 @@ export default async function server(
     const sdk = ThirdwebSDK.fromPrivateKey(
       // Your wallet private key (read it in from .env.local file)
       process.env.PRIVATE_KEY as string,
-      "mumbai"
+      DESIRED_CHAIN_NAME
     );
 
     // Load the NFT Collection via it's contract address using the SDK
