@@ -13,4 +13,24 @@ export default NextAuth({
       version: "2.0",
     }),
   ],
+  theme: {
+    colorScheme: "auto",
+    brandColor: "#c70eaa",
+    buttonText: "#418dff",
+  },
+  session: {
+    strategy: "jwt",
+  },
+  callbacks: {
+    async session({ session }) {
+      return session;
+    },
+    async jwt({ token, account }) {
+      if (account) {
+        token.accessToken = account.access_token;
+      }
+      return token;
+    },
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 });

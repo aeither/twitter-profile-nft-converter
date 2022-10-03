@@ -1,7 +1,15 @@
-import "../styles/globals.css";
 import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 import type { NextApiRequest, NextApiResponse } from "next";
-import animalNames from "../../animalNames";
+import { getToken } from "next-auth/jwt";
+import "../styles/globals.css";
+
+type ProfileInfo = {
+  url: string;
+  username: string;
+  name: string;
+  description: string;
+  id: string;
+};
 
 export default async function server(
   req: NextApiRequest,
@@ -30,17 +38,7 @@ export default async function server(
       process.env.NEXT_PUBLIC_NFT_COLLECTION_ADDRESS as string
     );
 
-    // Here we can make all kinds of cool checks to see if the user is eligible to mint the NFT.
-    // Here are a few examples:
-
-    // 1) Check that it's an animal name from our list of animal names
-    // This demonstrates how we can restrict what kinds of NFTs we give signatures for
-    if (!animalNames.includes(nftName?.toLowerCase())) {
-      res.status(400).json({ error: "That's not one of the animals we know!" });
-      return;
-    }
-
-    // 2) Check that this wallet hasn't already minted a page - 1 NFT per wallet
+    // Check that this wallet hasn't already minted a page - 1 NFT per wallet
     const hasMinted = (await nftCollection.balanceOf(authorAddress)).gt(0);
     if (hasMinted) {
       res.status(400).json({ error: "Already minted" });
@@ -48,6 +46,21 @@ export default async function server(
     }
 
     // If all the checks pass, begin generating the signature...
+    const secret = process.env.NEXTAUTH_SECRET;
+    const token = await getToken({
+      req,
+      secret,
+    });
+    const profileInfo: ProfileInfo = await fetch(
+      "https://api.twitter.com/2/users/me?user.fields=description,url,username",
+      {
+        headers: new Headers({
+          Authorization: `Bearer ${token?.accessToken}`,
+        }),
+      }
+    )
+      .then((res) => res.json())
+      .then((res) => res.data);
 
     // Generate the signature for the page NFT
     const signedPayload = await nftCollection.signature.generate({
@@ -55,9 +68,10 @@ export default async function server(
       metadata: {
         name: nftName as string,
         image: imagePath as string,
-        description: "An awesome animal NFT",
+        description: profileInfo.description,
         properties: {
-          // Add any properties you want to store on the NFT
+          username: profileInfo.id,
+          link: profileInfo.url,
         },
       },
     });

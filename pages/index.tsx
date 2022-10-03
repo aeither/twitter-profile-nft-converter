@@ -10,10 +10,19 @@ import {
   useSigner,
 } from "@thirdweb-dev/react";
 import { ChainId, NFTCollection, ThirdwebSDK } from "@thirdweb-dev/sdk";
+import axios from "axios";
 import type { NextPage } from "next";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signIn, signOut, useSession, getSession } from "next-auth/react";
 import { useRef, useState } from "react";
 import styles from "./styles/Home.module.css";
+
+function getBase64(url: string) {
+  return axios
+    .get(url, {
+      responseType: "arraybuffer",
+    })
+    .then((response: any) => Buffer.from(response.data, "binary"));
+}
 
 const Home: NextPage = () => {
   // Helpful thirdweb hooks to connect and manage the wallet from metamask.
@@ -30,28 +39,7 @@ const Home: NextPage = () => {
     process.env.NEXT_PUBLIC_NFT_COLLECTION_ADDRESS
   );
 
-  // Here we store the user inputs for their NFT.
-  const [nftName, setNftName] = useState<string>("");
-  const [file, setFile] = useState<File>();
-
   const { data: nfts, isLoading: loadingNfts } = useNFTs(contract);
-
-  // Magic to get the file upload even though its hidden
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  // Function to store file in state when user uploads it
-  const uploadFile = () => {
-    if (fileInputRef?.current) {
-      fileInputRef.current.click();
-
-      fileInputRef.current.onchange = () => {
-        if (fileInputRef?.current?.files?.length) {
-          const file = fileInputRef.current.files[0];
-          setFile(file);
-        }
-      };
-    }
-  };
 
   // This function calls a Next JS API route that mints an NFT with signature-based minting.
   // We send in the address of the current user, and the text they entered as part of the request.
@@ -67,7 +55,12 @@ const Home: NextPage = () => {
     }
 
     try {
-      if (!file || !nftName) {
+      if (
+        !session ||
+        !session.user ||
+        !session.user.image ||
+        !session.user.name
+      ) {
         alert("Please enter a name and upload a file.");
         return;
       }
@@ -78,15 +71,16 @@ const Home: NextPage = () => {
       }
 
       // Upload image to IPFS using the sdk.storage
+      const imageData = await getBase64(session.user.image);
       const tw = new ThirdwebSDK(signer);
-      const url = await tw.storage.upload(file);
+      const url = await tw.storage.upload(new File([imageData], "image"));
 
       // Make a request to /api/server
       const signedPayloadReq = await fetch(`/api/server`, {
         method: "POST",
         body: JSON.stringify({
           authorAddress: address, // Address of the current user
-          nftName: nftName,
+          nftName: session.user.name,
           imagePath: url,
         }),
       });
@@ -127,7 +121,12 @@ const Home: NextPage = () => {
     signIn();
   }
 
-  console.log("session", session);
+  const getSes = async () => {
+    if (session?.accessToken) {
+      console.log("we have access token");
+    }
+    console.log("we don't have");
+  };
 
   return (
     <>
@@ -173,8 +172,22 @@ const Home: NextPage = () => {
       <div className={styles.container}>
         {/* Twitter */}
         <h1 className={styles.h1}>Twitter</h1>
+        <button onClick={getSes}>getSes</button>
         <a className={styles.mainButton} onClick={signInWithTwitter}>
           signInWithTwitter
+        </a>
+        <a
+          onClick={signInWithTwitter}
+          className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
+        >
+          <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
+          <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
+          <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
+          <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
+          <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
+          <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
+          <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
+          <span className="relative">Do nothing</span>
         </a>
 
         <h3 className="mt-3 text-lg text-white">
@@ -190,67 +203,9 @@ const Home: NextPage = () => {
           Sign out
         </a>
         {/* Top Section */}
-        <h1 className={styles.h1}>Signature-Based Minting</h1>
-        <p className={styles.explain}>
-          Signature-based minting with{" "}
-          <b>
-            {" "}
-            <a
-              href="https://thirdweb.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.purple}
-            >
-              thirdweb
-            </a>
-          </b>{" "}
-          + Next.JS to create a community-made NFT collection with restrictions.
-        </p>
-        <p>
-          Hint: We only give out signatures if your NFT name is a cool{" "}
-          <b>animal name</b>! 😉
-        </p>
+
         <hr className={styles.divider} />
-        <div className={styles.collectionContainer}>
-          <h2 className={styles.ourCollection}>
-            Mint your own NFT into the collection:
-          </h2>
 
-          <input
-            type="text"
-            placeholder="Name of your NFT"
-            className={styles.textInput}
-            maxLength={26}
-            onChange={(e) => setNftName(e.target.value)}
-          />
-
-          {file ? (
-            <img
-              src={URL.createObjectURL(file)}
-              style={{ cursor: "pointer", maxHeight: 250, borderRadius: 8 }}
-              onClick={() => setFile(undefined)}
-            />
-          ) : (
-            <div
-              className={styles.imageInput}
-              onClick={uploadFile}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault();
-                setFile(e.dataTransfer.files[0]);
-              }}
-            >
-              Drag and drop an image here to upload it!
-            </div>
-          )}
-        </div>
-        <input
-          type="file"
-          accept="image/png, image/gif, image/jpeg"
-          id="profile-picture-input"
-          ref={fileInputRef}
-          style={{ display: "none" }}
-        />
         <div style={{ marginTop: 24 }}>
           {address ? (
             <a className={styles.mainButton} onClick={mintWithSignature}>
