@@ -1,4 +1,5 @@
 import {
+  ConnectWallet,
   ThirdwebNftMedia,
   useAddress,
   useContract,
@@ -12,9 +13,10 @@ import {
 import { ChainId, NFTCollection, ThirdwebSDK } from "@thirdweb-dev/sdk";
 import axios from "axios";
 import type { NextPage } from "next";
-import { signIn, signOut, useSession, getSession } from "next-auth/react";
-import { useRef, useState } from "react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import styles from "./styles/Home.module.css";
+import { SiTwitter } from "react-icons/si";
+import { BsFillLightningChargeFill } from "react-icons/bs";
 
 function getBase64(url: string) {
   return axios
@@ -128,66 +130,148 @@ const Home: NextPage = () => {
     console.log("we don't have");
   };
 
+  const TwitterButton = () => {
+    return (
+      <a
+        onClick={signInWithTwitter}
+        className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
+      >
+        <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
+        <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
+        <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
+        <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
+        <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
+        <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
+        <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
+
+        <div className="inline-flex items-center">
+          <SiTwitter />
+          <span className="relative pl-4">Sign in</span>
+        </div>
+      </a>
+    );
+  };
+  const ConvertButton = () => {
+    return (
+      <a
+        onClick={mintWithSignature}
+        className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
+      >
+        <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
+        <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
+        <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
+        <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
+        <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
+        <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
+        <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
+
+        <div className="inline-flex items-center">
+          <BsFillLightningChargeFill />
+          <span className="relative pl-4">Convert</span>
+        </div>
+      </a>
+    );
+  };
+
+  const Username = () => {
+    return (
+      <p className="mt-3 text-lg text-white">
+        {session && session.user && session.user.name
+          ? session.user.name
+          : "Your name"}
+      </p>
+    );
+  };
+
   return (
     <>
       {/* Header */}
-      <div className={styles.header}>
-        <div className={styles.left}>
-          <div>
-            <a
-              href="https://thirdweb.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img src={`/logo.png`} alt="Thirdweb Logo" width={135} />
-            </a>
+      <nav className="fixed top-0 w-screen bg-neutral-dark">
+        <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+          <div className="relative flex h-16 items-center justify-between">
+            <div className="flex flex-1 items-center justify-between sm:items-stretch ">
+              <div className="flex flex-shrink-0 items-center">
+                <div>
+                  <a
+                    href="https://thirdweb.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <img src={`/logo.png`} alt="Thirdweb Logo" width={135} />
+                  </a>
+                </div>
+              </div>
+
+              <div>
+                <ConnectWallet />
+              </div>
+            </div>
           </div>
         </div>
-        <div className={styles.right}>
-          {address ? (
-            <>
-              <a
-                className={styles.secondaryButton}
-                onClick={() => disconnectWallet()}
-              >
-                Disconnect Wallet
-              </a>
-              <p style={{ marginLeft: 8, marginRight: 8, color: "grey" }}>|</p>
-              <p>
-                {address.slice(0, 6).concat("...").concat(address.slice(-4))}
-              </p>
-            </>
-          ) : (
-            <a
-              className={styles.mainButton}
-              onClick={() => connectWithMetamask()}
-            >
-              Connect Wallet
-            </a>
-          )}
-        </div>
-      </div>
+      </nav>
 
       {/* Content */}
+      <div className="h-[100vh] bg-neutral-medium pt-16">
+        <div className="mx-auto flex h-full max-w-7xl items-center justify-center  p-16 py-12 px-4 sm:px-6">
+          <div className="flex flex-row gap-36 bg-connect-animation bg-[length:70%_30%] bg-center bg-no-repeat">
+            <div className="flex flex-shrink-0">
+              <div className="flex flex-col">
+                <h2 className=" bg-gradient-to-br from-pink-500 to-purple-800 bg-clip-text pb-12 text-3xl font-bold tracking-tight  text-transparent sm:text-4xl">
+                  1. Connect
+                </h2>
+                <div className="w-full items-center py-8">
+                  <img
+                    className="inline-block h-40 w-40 rounded-full ring-2 ring-white"
+                    src="https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                    alt=""
+                  />
+                </div>
+                <Username />
+                <div className="pt-6">
+                  <TwitterButton />
+                  <a className={styles.mainButton} onClick={() => signOut()}>
+                    Sign out
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-shrink-0">
+              <div className="flex flex-col">
+                <h2 className=" bg-gradient-to-br from-yellow-500 to-green-800 bg-clip-text pb-12 text-3xl font-bold tracking-tight  text-transparent sm:text-4xl">
+                  2. Convert
+                </h2>
+                <div className="w-full items-center py-8">
+                  <img
+                    className="inline-block h-40 w-40 rounded-full ring-2 ring-white"
+                    src="https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                    alt=""
+                  />
+                </div>
+                <Username />
+
+                <div className="pt-6">
+                  {address ? (
+                    <ConvertButton />
+                  ) : (
+                    <a
+                      className={styles.mainButton}
+                      onClick={connectWithMetamask}
+                    >
+                      Connect Wallet
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div className={styles.container}>
         {/* Twitter */}
         <h1 className={styles.h1}>Twitter</h1>
         <button onClick={getSes}>getSes</button>
         <a className={styles.mainButton} onClick={signInWithTwitter}>
           signInWithTwitter
-        </a>
-        <a
-          onClick={signInWithTwitter}
-          className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
-        >
-          <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
-          <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
-          <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
-          <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
-          <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
-          <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
-          <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
-          <span className="relative">Do nothing</span>
         </a>
 
         <h3 className="mt-3 text-lg text-white">
@@ -199,9 +283,7 @@ const Home: NextPage = () => {
         <a className={styles.mainButton} onClick={() => console.log(session)}>
           Log session
         </a>
-        <a className={styles.mainButton} onClick={() => signOut()}>
-          Sign out
-        </a>
+
         {/* Top Section */}
 
         <hr className={styles.divider} />
