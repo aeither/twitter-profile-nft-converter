@@ -9,18 +9,18 @@ import {
   useSigner,
 } from "@thirdweb-dev/react";
 import {
-  ChainId,
   NFTCollection,
   NFTMetadataOwner,
   ThirdwebSDK,
 } from "@thirdweb-dev/sdk";
 import axios from "axios";
+import { clsx } from "clsx";
 import type { NextPage } from "next";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { BsFillLightningChargeFill } from "react-icons/bs";
 import { SiTwitter } from "react-icons/si";
-import { clsx } from "clsx";
+import { DESIRED_CHAIN_ID } from "./utils/constants";
 
 type NftData = { id: string; metadataOwner: NFTMetadataOwner };
 
@@ -75,7 +75,7 @@ const Home: NextPage = () => {
     }
 
     if (isOnWrongNetwork) {
-      switchNetwork && switchNetwork(ChainId.Mumbai);
+      switchNetwork && switchNetwork(DESIRED_CHAIN_ID);
       return;
     }
 

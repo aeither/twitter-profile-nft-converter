@@ -1,12 +1,10 @@
-import { ChainId, ThirdwebProvider } from "@thirdweb-dev/react";
+import { ThirdwebProvider } from "@thirdweb-dev/react";
 import { SessionProvider } from "next-auth/react";
 import type { AppProps as NextAppProps } from "next/app";
 import Head from "next/head";
 import ThirdwebGuideFooter from "../components/guide/ThirdwebGuideFooter";
 import "./styles/globals.css";
-
-// This is the chainId your dApp will work on.
-const activeChainId = ChainId.Mumbai;
+import { DESIRED_CHAIN_ID } from "./utils/constants";
 
 type AppProps<P = any> = {
   pageProps: P;
@@ -15,7 +13,7 @@ type AppProps<P = any> = {
 function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   return (
     <SessionProvider session={session}>
-      <ThirdwebProvider desiredChainId={activeChainId}>
+      <ThirdwebProvider desiredChainId={DESIRED_CHAIN_ID}>
         <Head>
           <title>Twitter profile NFT converter</title>
           <meta
