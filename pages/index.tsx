@@ -321,15 +321,10 @@ const Home: NextPage = () => {
         </h2>
         {isMinted && nftData ? (
           <div className="w-full items-center py-8">
-            <div>
-              <ThirdwebNftMedia
-                metadata={nftData.metadataOwner.metadata}
-                style={{
-                  height: 90,
-                  borderRadius: 16,
-                }}
-              />
-            </div>
+            <ThirdwebNftMedia
+              metadata={nftData.metadataOwner.metadata}
+              className="mask mask-hexagon inline-block h-40 w-40"
+            />
           </div>
         ) : (
           <div className="w-full items-center py-8">
@@ -398,7 +393,7 @@ const Home: NextPage = () => {
       </nav>
 
       {/* Content */}
-      <div className="h-[100vh] bg-neutral-medium pt-16">
+      <div className="h-[100vh] w-[100vw] bg-neutral-medium pt-16">
         <div className="mx-auto flex h-full max-w-7xl items-center justify-center  p-16 py-12 px-4 sm:px-6">
           <div className="flex flex-row gap-36 bg-connect-animation bg-[length:70%_30%] bg-center bg-no-repeat">
             <div className="flex flex-shrink-0">

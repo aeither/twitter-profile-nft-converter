@@ -18,16 +18,16 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
     <SessionProvider session={session}>
       <ThirdwebProvider desiredChainId={activeChainId}>
         <Head>
-          <title>thirdweb Signature Based Minting</title>
+          <title>Twitter profile NFT converter</title>
           <meta
             name="viewport"
             content="width=device-width, initial-scale=1.0"
           />
           <meta
             name="description"
-            content="thirdweb Example Repository to Showcase signature based minting on an NFT Collection contract"
+            content="thirdweb Example Repository to Showcase Twitter profile NFT converter"
           />
-          <meta name="keywords" content="thirdweb signature based minting" />
+          <meta name="keywords" content="Twitter profile NFT converter" />
         </Head>
         <Component {...pageProps} />
         <ThirdwebGuideFooter />
