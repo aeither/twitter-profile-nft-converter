@@ -1,9 +1,8 @@
-import React from "react";
-import type { AppProps as NextAppProps } from "next/app";
 import { ChainId, ThirdwebProvider } from "@thirdweb-dev/react";
+import { SessionProvider } from "next-auth/react";
+import type { AppProps as NextAppProps } from "next/app";
 import Head from "next/head";
 import ThirdwebGuideFooter from "../components/guide/ThirdwebGuideFooter";
-import { SessionProvider } from "next-auth/react";
 import "./styles/globals.css";
 
 // This is the chainId your dApp will work on.

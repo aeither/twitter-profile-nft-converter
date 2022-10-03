@@ -3,7 +3,6 @@ import {
   ThirdwebNftMedia,
   useAddress,
   useContract,
-  useDisconnect,
   useMetamask,
   useNetwork,
   useNetworkMismatch,
@@ -19,10 +18,9 @@ import {
 import axios from "axios";
 import type { NextPage } from "next";
 import { signIn, signOut, useSession } from "next-auth/react";
-import styles from "./styles/Home.module.css";
-import { SiTwitter } from "react-icons/si";
+import { useEffect, useState } from "react";
 import { BsFillLightningChargeFill } from "react-icons/bs";
-import { useEffect, useMemo, useState } from "react";
+import { SiTwitter } from "react-icons/si";
 
 type NftData = { id: string; metadataOwner: NFTMetadataOwner };
 
