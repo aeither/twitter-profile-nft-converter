@@ -9,5 +9,5 @@ Convert your Twitter profile image to NFT in just 2 steps.
 
 ## Video Demo
 
-https://user-images.githubusercontent.com/36173828/193691989-c1b2e0f2-f7a3-4352-bd12-5e120a0ffde0.mov
+https://user-images.githubusercontent.com/36173828/193696931-3e7bc2c4-588d-4ec6-8b25-c1799cd8cbff.mov
 
