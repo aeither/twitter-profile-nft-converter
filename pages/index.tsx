@@ -1,18 +1,19 @@
-import styles from "./styles/Home.module.css";
 import {
   ThirdwebNftMedia,
   useAddress,
+  useContract,
   useDisconnect,
   useMetamask,
   useNetwork,
   useNetworkMismatch,
   useNFTs,
   useSigner,
-  useContract,
 } from "@thirdweb-dev/react";
 import { ChainId, NFTCollection, ThirdwebSDK } from "@thirdweb-dev/sdk";
 import type { NextPage } from "next";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { useRef, useState } from "react";
+import styles from "./styles/Home.module.css";
 
 const Home: NextPage = () => {
   // Helpful thirdweb hooks to connect and manage the wallet from metamask.
@@ -22,6 +23,7 @@ const Home: NextPage = () => {
   const signer = useSigner();
   const isOnWrongNetwork = useNetworkMismatch();
   const [, switchNetwork] = useNetwork();
+  const { data: session, status } = useSession();
 
   // Fetch the NFT collection from thirdweb via it's contract address.
   const { contract } = useContract<NFTCollection>(
@@ -121,6 +123,12 @@ const Home: NextPage = () => {
     }
   };
 
+  async function signInWithTwitter() {
+    signIn();
+  }
+
+  console.log("session", session);
+
   return (
     <>
       {/* Header */}
@@ -163,6 +171,24 @@ const Home: NextPage = () => {
 
       {/* Content */}
       <div className={styles.container}>
+        {/* Twitter */}
+        <h1 className={styles.h1}>Twitter</h1>
+        <a className={styles.mainButton} onClick={signInWithTwitter}>
+          signInWithTwitter
+        </a>
+
+        <h3 className="mt-3 text-lg text-white">
+          Welcome {session && session.user && session.user.name}
+        </h3>
+        <h3 className="mt-3 text-lg text-white">
+          You are signed in as {session && session.user && session.user.email}
+        </h3>
+        <a className={styles.mainButton} onClick={() => console.log(session)}>
+          Log session
+        </a>
+        <a className={styles.mainButton} onClick={() => signOut()}>
+          Sign out
+        </a>
         {/* Top Section */}
         <h1 className={styles.h1}>Signature-Based Minting</h1>
         <p className={styles.explain}>
@@ -180,14 +206,11 @@ const Home: NextPage = () => {
           </b>{" "}
           + Next.JS to create a community-made NFT collection with restrictions.
         </p>
-
         <p>
           Hint: We only give out signatures if your NFT name is a cool{" "}
           <b>animal name</b>! 😉
         </p>
-
         <hr className={styles.divider} />
-
         <div className={styles.collectionContainer}>
           <h2 className={styles.ourCollection}>
             Mint your own NFT into the collection:
@@ -228,7 +251,6 @@ const Home: NextPage = () => {
           ref={fileInputRef}
           style={{ display: "none" }}
         />
-
         <div style={{ marginTop: 24 }}>
           {address ? (
             <a className={styles.mainButton} onClick={mintWithSignature}>
@@ -240,9 +262,7 @@ const Home: NextPage = () => {
             </a>
           )}
         </div>
-
         <hr className={styles.smallDivider} />
-
         <div className={styles.collectionContainer}>
           <h2 className={styles.ourCollection}>
             Other NFTs in this collection:
