@@ -6,7 +6,6 @@ import {
   useMetamask,
   useNetwork,
   useNetworkMismatch,
-  useNFTs,
   useSigner,
 } from "@thirdweb-dev/react";
 import {
@@ -21,6 +20,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { BsFillLightningChargeFill } from "react-icons/bs";
 import { SiTwitter } from "react-icons/si";
+import { clsx } from "clsx";
 
 type NftData = { id: string; metadataOwner: NFTMetadataOwner };
 
@@ -42,6 +42,7 @@ const Home: NextPage = () => {
   const { data: session } = useSession();
   const [isMinted, setIsMinted] = useState(false);
   const [nftData, setNftData] = useState<NftData>();
+  const [isMinting, setIsMinting] = useState(false);
 
   // Fetch the NFT collection from thirdweb via it's contract address.
   const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_NFT_COLLECTION_ADDRESS;
@@ -65,8 +66,6 @@ const Home: NextPage = () => {
     getIsMinted();
   }, [contract, address]);
 
-  const { data: nfts, isLoading: loadingNfts } = useNFTs(contract);
-
   // This function calls a Next JS API route that mints an NFT with signature-based minting.
   // We send in the address of the current user, and the text they entered as part of the request.
   const mintWithSignature = async () => {
@@ -80,6 +79,7 @@ const Home: NextPage = () => {
       return;
     }
 
+    setIsMinting(true);
     try {
       if (
         !session ||
@@ -136,10 +136,13 @@ const Home: NextPage = () => {
       console.log("Successfully minted NFT with signature", nft);
 
       alert("Successfully minted NFT with signature");
+      getIsMinted();
 
       return nft;
     } catch (e) {
       console.error("An error occurred trying to mint the NFT:", e);
+    } finally {
+      setIsMinting(false);
     }
   };
 
@@ -202,8 +205,7 @@ const Home: NextPage = () => {
       return (
         <>
           <a
-            // href={`https://opensea.io/assets/matic/${CONTRACT_ADDRESS}/${nftData?.id}`}
-            href="https://twitter.com/giovannifulin"
+            href={`https://opensea.io/assets/matic/${CONTRACT_ADDRESS}/${nftData?.id}`}
             target="_blank"
             rel="noreferrer"
             className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
@@ -218,7 +220,7 @@ const Home: NextPage = () => {
 
             <div className="inline-flex items-center">
               <BsFillLightningChargeFill />
-              <span className="relative pl-4">Follow Me</span>
+              <span className="relative pl-4">Opensea</span>
             </div>
           </a>
         </>
@@ -230,7 +232,10 @@ const Home: NextPage = () => {
         {address ? (
           <a
             onClick={mintWithSignature}
-            className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
+            className={clsx(
+              "group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl",
+              { "pointer-events-none text-gray-700": isMinting }
+            )}
           >
             <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
             <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
@@ -242,7 +247,9 @@ const Home: NextPage = () => {
 
             <div className="inline-flex items-center">
               <BsFillLightningChargeFill />
-              <span className="relative pl-4">Convert</span>
+              <span className="relative pl-4">
+                {isMinting ? "Minting..." : "Convert"}
+              </span>
             </div>
           </a>
         ) : (
