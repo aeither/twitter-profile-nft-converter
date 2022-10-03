@@ -6,11 +6,11 @@ import {
   useMetamask,
   useNetwork,
   useNetworkMismatch,
-  useNFTCollection,
   useNFTs,
   useSigner,
+  useContract,
 } from "@thirdweb-dev/react";
-import { ChainId, ThirdwebSDK } from "@thirdweb-dev/sdk";
+import { ChainId, NFTCollection, ThirdwebSDK } from "@thirdweb-dev/sdk";
 import type { NextPage } from "next";
 import { useRef, useState } from "react";
 
@@ -24,8 +24,7 @@ const Home: NextPage = () => {
   const [, switchNetwork] = useNetwork();
 
   // Fetch the NFT collection from thirdweb via it's contract address.
-  const nftCollection = useNFTCollection(
-    // Replace this with your NFT Collection contract address
+  const { contract } = useContract<NFTCollection>(
     process.env.NEXT_PUBLIC_NFT_COLLECTION_ADDRESS
   );
 
@@ -33,7 +32,7 @@ const Home: NextPage = () => {
   const [nftName, setNftName] = useState<string>("");
   const [file, setFile] = useState<File>();
 
-  const { data: nfts, isLoading: loadingNfts } = useNFTs(nftCollection);
+  const { data: nfts, isLoading: loadingNfts } = useNFTs(contract);
 
   // Magic to get the file upload even though its hidden
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -78,8 +77,7 @@ const Home: NextPage = () => {
 
       // Upload image to IPFS using the sdk.storage
       const tw = new ThirdwebSDK(signer);
-      const upload = await tw.storage.upload(file);
-      const url = `${upload.uris[0]}`;
+      const url = await tw.storage.upload(file);
 
       // Make a request to /api/server
       const signedPayloadReq = await fetch(`/api/server`, {
@@ -111,7 +109,7 @@ const Home: NextPage = () => {
 
       // Now we can call signature.mint and pass in the signed payload that we received from the server.
       // This means we provided a signature for the user to mint an NFT with.
-      const nft = await nftCollection?.signature.mint(signedPayload);
+      const nft = await contract?.signature.mint(signedPayload);
 
       console.log("Successfully minted NFT with signature", nft);
 

@@ -25,7 +25,7 @@ export default async function server(
     );
 
     // Load the NFT Collection via it's contract address using the SDK
-    const nftCollection = sdk.getNFTCollection(
+    const nftCollection = await sdk.getNFTCollection(
       // Replace this with your NFT Collection contract address
       process.env.NEXT_PUBLIC_NFT_COLLECTION_ADDRESS as string
     );
