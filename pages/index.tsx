@@ -1,5 +1,4 @@
 import {
-  ConnectWallet,
   ThirdwebNftMedia,
   useAddress,
   useContract,
@@ -13,11 +12,11 @@ import {
   NFTMetadataOwner,
   ThirdwebSDK,
 } from "@thirdweb-dev/sdk";
-import axios from "axios";
 import type { NextPage } from "next";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import StyledButton from "../components/button/StyledButton";
+import Navbar from "../components/header/Navbar";
 import { DESIRED_CHAIN_ID } from "../utils/constants";
 import { getBuffer } from "../utils/utils";
 
@@ -183,13 +182,23 @@ const Home: NextPage = () => {
   };
 
   const ConvertButton = () => {
+    if (!session) {
+      return (
+        <StyledButton
+          callback={mintWithSignature}
+          icon="convert"
+          isDisabled={true}
+        >
+          Convert
+        </StyledButton>
+      );
+    }
+
     if (isMinted) {
       return (
-        <>
-          <StyledButton callback={openOpensea} icon="convert">
-            Opensea
-          </StyledButton>
-        </>
+        <StyledButton callback={openOpensea} icon="convert">
+          Opensea
+        </StyledButton>
       );
     }
 
@@ -224,155 +233,128 @@ const Home: NextPage = () => {
 
   const PreProfile = () => {
     return (
-      <>
-        <h2 className="bg-gradient-to-br from-pink-500 to-purple-800 bg-clip-text pb-12 text-3xl font-bold tracking-tight  text-transparent sm:text-4xl">
-          1. Connect
-        </h2>
-        {session && session.user && session.user.image ? (
-          <div className="w-full items-center py-8">
-            <img
-              className="inline-block h-40 w-40 rounded-full ring-2 ring-pink-500 ring-offset-2 ring-offset-white"
-              src={session.user.image.replace("_normal", "")}
-              alt=""
-            />
+      <div className="flex flex-shrink-0">
+        <div className="flex flex-col">
+          <h2 className="bg-gradient-to-br from-pink-500 to-purple-800 bg-clip-text pb-12 text-3xl font-bold tracking-tight  text-transparent sm:text-4xl">
+            1. Connect
+          </h2>
+          {session && session.user && session.user.image ? (
+            <div className="w-full items-center py-8">
+              <img
+                className="inline-block h-40 w-40 rounded-full ring-2 ring-pink-500 ring-offset-2 ring-offset-white"
+                src={session.user.image.replace("_normal", "")}
+                alt=""
+              />
+            </div>
+          ) : (
+            <div className="w-full items-center py-8">
+              <img
+                className="inline-block h-40 w-40 rounded-full ring-2 ring-white"
+                src="/avatars.gif"
+                alt=""
+              />
+            </div>
+          )}
+          <Username />
+          <div className="pt-6">
+            <TwitterButton />
           </div>
-        ) : (
-          <div className="w-full items-center py-8">
-            <img
-              className="inline-block h-40 w-40 rounded-full ring-2 ring-white"
-              src="/avatars.gif"
-              alt=""
-            />
-          </div>
-        )}
-
-        <Username />
-
-        <div className="pt-6">
-          <TwitterButton />
         </div>
-      </>
+      </div>
     );
   };
 
   const PostProfile = () => {
     return (
-      <>
-        <h2 className="bg-gradient-to-br from-yellow-500 to-green-800 bg-clip-text pb-12 text-3xl font-bold tracking-tight  text-transparent sm:text-4xl">
-          2. Convert
-        </h2>
-        {isMinted && nftData ? (
-          <div className="w-full items-center py-8">
-            <ThirdwebNftMedia
-              metadata={nftData.metadataOwner.metadata}
-              className="mask mask-hexagon inline-block h-40 w-40"
-            />
-          </div>
-        ) : (
-          <div className="w-full items-center py-8">
-            <img
-              className="mask mask-hexagon inline-block h-40 w-40"
-              src="/unknown.jpg"
-              alt=""
-            />
-          </div>
-        )}
-
-        <Username />
-
-        <div className="pt-6">
-          {session && session.user && session.user.image ? (
-            <ConvertButton />
+      <div className="flex flex-shrink-0">
+        <div className="flex flex-col">
+          <h2 className="bg-gradient-to-br from-yellow-500 to-green-800 bg-clip-text pb-12 text-3xl font-bold tracking-tight  text-transparent sm:text-4xl">
+            2. Convert
+          </h2>
+          {isMinted && nftData ? (
+            <div className="w-full items-center py-8">
+              <ThirdwebNftMedia
+                metadata={nftData.metadataOwner.metadata}
+                className="mask mask-hexagon inline-block h-40 w-40"
+              />
+            </div>
           ) : (
-            <StyledButton
-              callback={mintWithSignature}
-              icon="convert"
-              isDisabled={true}
-            >
-              Convert
-            </StyledButton>
+            <div className="w-full items-center py-8">
+              <img
+                className="mask mask-hexagon inline-block h-40 w-40"
+                src="/unknown.jpg"
+                alt=""
+              />
+            </div>
           )}
+          <Username />
+          <div className="pt-6">
+            <ConvertButton />
+          </div>
         </div>
-      </>
+      </div>
+    );
+  };
+
+  const Banner = () => {
+    return (
+      <div className="flex h-full w-full flex-col items-center pb-8">
+        <div className="h-36 w-full rounded-lg bg-[url('/twitter-banner.jpg')] bg-cover md:w-1/2" />
+      </div>
+    );
+  };
+
+  const StabilityComp = () => {
+    return (
+      <div className="mx-auto flex flex-col gap-2 pt-16">
+        <div className="pb-6">
+          <span className="text-sm text-slate-500">
+            What if I do NOT want to use my picture?
+          </span>
+          <h3 className="bg-gradient-to-br from-blue-500 to-green-300 bg-clip-text text-lg font-bold  tracking-tight text-transparent">
+            Generate one with AI
+          </h3>
+          <span className="text-slate-300">
+            Describe your ideal picture as precisely as possible. 
+          </span>
+        </div>
+        <input
+          className="block w-full rounded-full border border-slate-700 bg-neutral-dark px-6 py-4 shadow-sm placeholder:italic placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-pink-500 sm:text-sm"
+          placeholder="portrait ironman futuristic mars ski goggles cigar"
+          type="text"
+          name="search"
+          onChange={(e) => setPrompt(e.target.value)}
+        />
+        <div className="pt-6">
+          <StyledButton
+            callback={mintWithSignature}
+            icon="convert"
+            isDisabled={true}
+          >
+            Generate
+          </StyledButton>
+        </div>
+        <span className="text-sm text-slate-500">
+          *Sign out and sign in again to use your Twitter pic again.
+        </span>
+      </div>
     );
   };
 
   return (
     <>
       {/* Header */}
-      <nav className="fixed top-0 w-screen bg-neutral-dark">
-        <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
-          <div className="relative flex h-16 items-center justify-between">
-            <div className="flex flex-1 items-center justify-between sm:items-stretch ">
-              <div className="flex flex-shrink-0 items-center">
-                <div>
-                  <a
-                    href="https://thirdweb.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <img src={`/logo.png`} alt="Thirdweb Logo" width={135} />
-                  </a>
-                </div>
-              </div>
-              <div>
-                <ConnectWallet />
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Content */}
       <div className="w-[100vw] bg-neutral-medium pt-16">
-        <div className="mx-auto flex h-full max-w-7xl flex-col items-center justify-center  p-16 py-12 px-4 sm:px-6">
-          <div className="flex h-full w-full flex-col items-center pb-8">
-            <div className="h-36 w-full rounded-lg bg-[url('/twitter-banner.jpg')] bg-cover md:w-1/2" />
-          </div>
+        <div className="mx-auto flex h-full max-w-7xl flex-col items-center justify-center p-16 py-12 px-4 sm:px-6">
+          <Banner />
           <div className="flex flex-row gap-2 bg-connect-animation bg-[length:70%_30%] bg-center bg-no-repeat sm:gap-16 md:gap-36">
-            <div className="flex flex-shrink-0">
-              <div className="flex flex-col">
-                <PreProfile />
-              </div>
-            </div>
-            <div className="flex flex-shrink-0">
-              <div className="flex flex-col">
-                <PostProfile />
-              </div>
-            </div>
+            <PreProfile />
+            <PostProfile />
           </div>
-          <div className="mx-auto flex flex-col gap-2 pt-16">
-            <div className="pb-6">
-              <span className="text-sm text-slate-500">
-                What if I do NOT want to use my picture?
-              </span>
-              <h3 className="bg-gradient-to-br from-blue-500 to-green-300 bg-clip-text text-lg font-bold  tracking-tight text-transparent">
-                Generate one with AI
-              </h3>
-              <span className="text-slate-300">
-                Describe your ideal picture as precisely as possible. 
-              </span>
-            </div>
-            <input
-              className="block w-full rounded-full border border-slate-700 bg-neutral-dark px-6 py-4 shadow-sm placeholder:italic placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-pink-500 sm:text-sm"
-              placeholder="portrait ironman futuristic mars ski goggles cigar"
-              type="text"
-              name="search"
-              onChange={(e) => setPrompt(e.target.value)}
-            />
-            <div className="pt-6">
-              <StyledButton
-                callback={mintWithSignature}
-                icon="convert"
-                isDisabled={true}
-              >
-                Generate
-              </StyledButton>
-            </div>
-            <span className="text-sm text-slate-500">
-              *Sign out and sign in again to use your Twitter pic again.
-            </span>
-          </div>
+          <StabilityComp />
         </div>
       </div>
     </>
