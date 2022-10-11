@@ -4,16 +4,18 @@ import { BsFillLightningChargeFill } from "react-icons/bs";
 import { SiTwitter } from "react-icons/si";
 
 type ButtonProps = {
-  callback: () => Promise<void>;
+  callback: () => Promise<void | any>;
   icon: string;
   children?: React.ReactNode;
   isSignOut?: boolean;
+  isDisabled?: boolean;
 };
 
 const StyledButton = ({
   callback,
   icon,
   isSignOut = false,
+  isDisabled = false,
   children,
 }: ButtonProps) => {
   const ButtonIcon = () => {
@@ -29,7 +31,10 @@ const StyledButton = ({
   return (
     <a
       onClick={callback}
-      className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
+      className={clsx(
+        "group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl",
+        { "pointer-events-none text-gray-700 disabled:opacity-25": isDisabled }
+      )}
     >
       <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
       <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
@@ -52,8 +57,3 @@ const StyledButton = ({
 };
 
 export default StyledButton;
-
-// className={clsx(
-//   "group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl",
-//   { "pointer-events-none text-gray-700": isMinting }
-// )}

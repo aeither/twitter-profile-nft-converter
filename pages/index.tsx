@@ -14,17 +14,15 @@ import {
   ThirdwebSDK,
 } from "@thirdweb-dev/sdk";
 import axios from "axios";
-import { clsx } from "clsx";
 import type { NextPage } from "next";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { BsFillLightningChargeFill } from "react-icons/bs";
 import StyledButton from "../components/button/StyledButton";
 import { DESIRED_CHAIN_ID } from "../utils/constants";
 
 type NftData = { id: string; metadataOwner: NFTMetadataOwner };
 
-function getBase64(url: string) {
+function getBuffer(url: string) {
   return axios
     .get(url, {
       responseType: "arraybuffer",
@@ -97,7 +95,7 @@ const Home: NextPage = () => {
       }
 
       // Upload image to IPFS using the sdk.storage
-      const imageData = await getBase64(session.user.image);
+      const imageData = await getBuffer(session.user.image);
       const tw = new ThirdwebSDK(signer);
       const url = await tw.storage.upload(new File([imageData], "image"));
 
@@ -154,6 +152,11 @@ const Home: NextPage = () => {
     signOut();
   }
 
+  async function openOpensea() {
+    const URL = `https://opensea.io/assets/matic/${CONTRACT_ADDRESS}/${nftData?.id}`;
+    window.open(URL, "_blank");
+  }
+
   const TwitterButton = () => {
     return (
       <>
@@ -162,6 +165,7 @@ const Home: NextPage = () => {
             callback={signOutWithTwitter}
             icon="twitter"
             isSignOut={true}
+            isDisabled={isMinting}
           >
             Sign out
           </StyledButton>
@@ -178,25 +182,9 @@ const Home: NextPage = () => {
     if (isMinted) {
       return (
         <>
-          <a
-            href={`https://opensea.io/assets/matic/${CONTRACT_ADDRESS}/${nftData?.id}`}
-            target="_blank"
-            rel="noreferrer"
-            className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
-          >
-            <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
-            <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
-            <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
-            <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
-            <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
-            <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
-            <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
-
-            <div className="inline-flex items-center">
-              <BsFillLightningChargeFill />
-              <span className="relative pl-4">Opensea</span>
-            </div>
-          </a>
+          <StyledButton callback={openOpensea} icon="convert">
+            Opensea
+          </StyledButton>
         </>
       );
     }
@@ -204,46 +192,17 @@ const Home: NextPage = () => {
     return (
       <>
         {address ? (
-          <a
-            onClick={mintWithSignature}
-            className={clsx(
-              "group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl",
-              { "pointer-events-none text-gray-700": isMinting }
-            )}
+          <StyledButton
+            callback={mintWithSignature}
+            icon="convert"
+            isDisabled={isMinting}
           >
-            <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
-            <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
-            <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
-            <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
-            <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
-            <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
-            <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
-
-            <div className="inline-flex items-center">
-              <BsFillLightningChargeFill />
-              <span className="relative pl-4">
-                {isMinting ? "Minting..." : "Convert"}
-              </span>
-            </div>
-          </a>
+            {isMinting ? "Minting..." : "Convert"}
+          </StyledButton>
         ) : (
-          <a
-            onClick={connectWithMetamask}
-            className="group relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-white shadow-2xl"
-          >
-            <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
-            <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
-            <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
-            <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
-            <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
-            <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
-            <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
-
-            <div className="inline-flex items-center">
-              <BsFillLightningChargeFill />
-              <span className="relative pl-4">Connect Metamask</span>
-            </div>
-          </a>
+          <StyledButton callback={connectWithMetamask} icon="convert">
+            Connect Metamask
+          </StyledButton>
         )}
       </>
     );
@@ -262,7 +221,7 @@ const Home: NextPage = () => {
   const PreProfile = () => {
     return (
       <>
-        <h2 className=" bg-gradient-to-br from-pink-500 to-purple-800 bg-clip-text pb-12 text-3xl font-bold tracking-tight  text-transparent sm:text-4xl">
+        <h2 className="bg-gradient-to-br from-pink-500 to-purple-800 bg-clip-text pb-12 text-3xl font-bold tracking-tight  text-transparent sm:text-4xl">
           1. Connect
         </h2>
         {session && session.user && session.user.image ? (
@@ -295,7 +254,7 @@ const Home: NextPage = () => {
   const PostProfile = () => {
     return (
       <>
-        <h2 className=" bg-gradient-to-br from-yellow-500 to-green-800 bg-clip-text pb-12 text-3xl font-bold tracking-tight  text-transparent sm:text-4xl">
+        <h2 className="bg-gradient-to-br from-yellow-500 to-green-800 bg-clip-text pb-12 text-3xl font-bold tracking-tight  text-transparent sm:text-4xl">
           2. Convert
         </h2>
         {isMinted && nftData ? (
@@ -321,24 +280,13 @@ const Home: NextPage = () => {
           {session && session.user && session.user.image ? (
             <ConvertButton />
           ) : (
-            // Disabled
-            <a
-              onClick={mintWithSignature}
-              className="group pointer-events-none relative inline-flex animate-pulse cursor-pointer items-center justify-center overflow-hidden rounded-full px-6 py-3 font-bold text-gray-700 shadow-2xl disabled:opacity-25"
+            <StyledButton
+              callback={mintWithSignature}
+              icon="convert"
+              isDisabled={true}
             >
-              <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-pink-600 via-purple-700 to-blue-400 opacity-0 transition duration-300 ease-out group-hover:opacity-100"></span>
-              <span className="absolute top-0 left-0 h-1/3 w-full bg-gradient-to-b from-white to-transparent opacity-5"></span>
-              <span className="absolute bottom-0 left-0 h-1/3 w-full bg-gradient-to-t from-white to-transparent opacity-5"></span>
-              <span className="absolute bottom-0 left-0 h-full w-4 bg-gradient-to-r from-white to-transparent opacity-5"></span>
-              <span className="absolute bottom-0 right-0 h-full w-4 bg-gradient-to-l from-white to-transparent opacity-5"></span>
-              <span className="absolute inset-0 h-full w-full rounded-md border border-white opacity-10"></span>
-              <span className="absolute h-0 w-0 rounded-full bg-white opacity-5 transition-all duration-300 ease-out group-hover:h-56 group-hover:w-56"></span>
-
-              <div className="inline-flex items-center">
-                <BsFillLightningChargeFill />
-                <span className="relative pl-4">Convert</span>
-              </div>
-            </a>
+              Convert
+            </StyledButton>
           )}
         </div>
       </>
@@ -374,7 +322,7 @@ const Home: NextPage = () => {
       {/* Content */}
       <div className="h-[100vh] w-[100vw] bg-neutral-medium pt-16">
         <div className="mx-auto flex h-full max-w-7xl items-center justify-center  p-16 py-12 px-4 sm:px-6">
-          <div className="flex flex-row gap-36 bg-connect-animation bg-[length:70%_30%] bg-center bg-no-repeat">
+          <div className="flex flex-row gap-2 bg-connect-animation bg-[length:70%_30%] bg-center bg-no-repeat md:gap-36">
             <div className="flex flex-shrink-0">
               <div className="flex flex-col">
                 <PreProfile />
