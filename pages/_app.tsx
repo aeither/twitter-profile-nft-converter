@@ -3,8 +3,8 @@ import { SessionProvider } from "next-auth/react";
 import type { AppProps as NextAppProps } from "next/app";
 import Head from "next/head";
 import ThirdwebGuideFooter from "../components/guide/ThirdwebGuideFooter";
-import "./styles/globals.css";
 import { DESIRED_CHAIN_ID } from "../utils/constants";
+import "./styles/globals.css";
 
 type AppProps<P = any> = {
   pageProps: P;

@@ -1,7 +1,7 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import "../styles/globals.css";
-import { generate } from "stability-client";
 import { ThirdwebStorage } from "@thirdweb-dev/storage";
+import type { NextApiRequest, NextApiResponse } from "next";
+import { generate } from "stability-client";
+import "../styles/globals.css";
 
 export default async function server(
   req: NextApiRequest,
