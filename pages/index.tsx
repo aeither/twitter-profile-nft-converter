@@ -147,25 +147,32 @@ const Home: NextPage = () => {
   };
 
   const generatePic = async () => {
-    const res = await fetch(`/api/stability`, {
-      method: "POST",
-      body: JSON.stringify({
-        prompt: prompt,
-      }),
-    });
+    setIsMinting(true);
+    try {
+      const res = await fetch(`/api/stability`, {
+        method: "POST",
+        body: JSON.stringify({
+          prompt: prompt,
+        }),
+      });
 
-    // Grab the JSON from the response
-    const json = await res.json();
-    console.log("Json:", json);
+      // Grab the JSON from the response
+      const json = await res.json();
+      console.log("Json:", json);
 
-    // If the request failed, we'll show an error.
-    if (!res.ok) {
-      alert(json.error);
-      return;
+      // If the request failed, we'll show an error.
+      if (!res.ok) {
+        alert(json.error);
+        return;
+      }
+
+      const uri: string = json.uri;
+      setStabilityImage(uri);
+    } catch (error) {
+      console.error("An error occurred trying to generate an image: ", error);
+    } finally {
+      setIsMinting(false);
     }
-
-    const uri: string = json.uri;
-    setStabilityImage(uri);
   };
 
   const signInWithTwitter = async () => {
@@ -301,10 +308,12 @@ const Home: NextPage = () => {
           </h2>
           {isMinted && nftData ? (
             <div className="w-full items-center py-8">
-              <ThirdwebNftMedia
-                metadata={nftData.metadataOwner.metadata}
-                className="mask mask-hexagon inline-block h-40 w-40"
-              />
+              <div className="mask mask-hexagon h-42 w-42 bg-white">
+                <ThirdwebNftMedia
+                  metadata={nftData.metadataOwner.metadata}
+                  className="mask mask-hexagon inline-block h-40 w-40"
+                />
+              </div>
             </div>
           ) : (
             <div className="w-full items-center py-8">
@@ -339,7 +348,7 @@ const Home: NextPage = () => {
   const Banner = () => {
     return (
       <div className="flex h-full w-full flex-col items-center pb-8">
-        <div className="h-36 w-full rounded-lg bg-[url('/twitter-banner.jpg')] bg-cover md:w-1/2" />
+        <div className="h-36 w-full rounded-lg bg-[url('/twitter-banner.png')] bg-cover md:w-1/2" />
       </div>
     );
   };
@@ -350,7 +359,7 @@ const Home: NextPage = () => {
       <Navbar />
 
       {/* Content */}
-      <div className="w-[100vw] bg-neutral-medium pt-16">
+      <div className="w-full bg-neutral-medium pt-16">
         <div className="mx-auto flex h-full max-w-7xl flex-col items-center justify-center p-16 py-12 px-4 sm:px-6">
           <Banner />
           <div className="flex flex-row gap-2 bg-connect-animation bg-[length:70%_30%] bg-center bg-no-repeat sm:gap-16 md:gap-36">
@@ -382,7 +391,7 @@ const Home: NextPage = () => {
               <StyledButton
                 callback={generatePic}
                 icon="convert"
-                isDisabled={session ? false : true}
+                isDisabled={isMinting || !session ? true : false}
               >
                 Generate
               </StyledButton>
