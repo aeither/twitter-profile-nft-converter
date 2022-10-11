@@ -5749,10 +5749,10 @@ split@0.3:
   dependencies:
     through "2"
 
-stability-ts@^1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/stability-ts/-/stability-ts-1.3.0.tgz#7419960579e9898eeba9fb1b725d3837b02ef520"
-  integrity sha512-HcOahS9NeIbPaIeUloYa15NJyTJLTIC1a4ew6qNgWDM9pmp+iVXL1GOlMt7ivQkFT5e7VZOiwQSgdC0kwW31AQ==
+stability-client@^1.6.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/stability-client/-/stability-client-1.6.0.tgz#f23612d8942d49937b6f99114fca9a522c5b076b"
+  integrity sha512-Kx47rnlSBI3hWArF846YdfXKtef0sjNjGbPRdCc62XB6ZFvRBis67hI1xvejn5wu2wTKBZNL4jWM/oOU1xnUYg==
   dependencies:
     "@improbable-eng/grpc-web" "^0.15.0"
     "@improbable-eng/grpc-web-node-http-transport" "^0.15.0"

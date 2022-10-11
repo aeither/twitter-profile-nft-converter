@@ -1,4 +1,5 @@
 import {
+  MediaRenderer,
   ThirdwebNftMedia,
   useAddress,
   useContract,
@@ -34,6 +35,7 @@ const Home: NextPage = () => {
   const [nftData, setNftData] = useState<NftData>();
   const [isMinting, setIsMinting] = useState(false);
   const [prompt, setPrompt] = useState("");
+  const [stabilityImage, setStabilityImage] = useState<string>();
 
   // Fetch the NFT collection from thirdweb via it's contract address.
   const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_NFT_COLLECTION_ADDRESS;
@@ -87,11 +89,17 @@ const Home: NextPage = () => {
         return;
       }
 
-      // Upload image to IPFS using the sdk.storage
-      const originalImage = session.user.image.replace("_normal", "");
-      const imageBuffer = await getBuffer(originalImage);
-      const tw = new ThirdwebSDK(signer);
-      const url = await tw.storage.upload(new File([imageBuffer], "image"));
+      // Use Stable Diffusion generated image uri if exist
+      let url;
+      if (stabilityImage) {
+        url = stabilityImage;
+      } else {
+        // Upload image to IPFS using the sdk.storage
+        const originalImage = session.user.image.replace("_normal", "");
+        const imageBuffer = await getBuffer(originalImage);
+        const tw = new ThirdwebSDK(signer);
+        url = await tw.storage.upload(new File([imageBuffer], "image"));
+      }
 
       // Make a request to /api/server
       const signedPayloadReq = await fetch(`/api/server`, {
@@ -139,12 +147,25 @@ const Home: NextPage = () => {
   };
 
   const generatePic = async () => {
-    const signedPayloadReq = await fetch(`/api/stability`, {
+    const res = await fetch(`/api/stability`, {
       method: "POST",
       body: JSON.stringify({
         prompt: prompt,
       }),
     });
+
+    // Grab the JSON from the response
+    const json = await res.json();
+    console.log("Json:", json);
+
+    // If the request failed, we'll show an error.
+    if (!res.ok) {
+      alert(json.error);
+      return;
+    }
+
+    const uri: string = json.uri;
+    setStabilityImage(uri);
   };
 
   const signInWithTwitter = async () => {
@@ -230,7 +251,6 @@ const Home: NextPage = () => {
       </p>
     );
   };
-
   const PreProfile = () => {
     return (
       <div className="flex flex-shrink-0">
@@ -240,11 +260,19 @@ const Home: NextPage = () => {
           </h2>
           {session && session.user && session.user.image ? (
             <div className="w-full items-center py-8">
-              <img
-                className="inline-block h-40 w-40 rounded-full ring-2 ring-pink-500 ring-offset-2 ring-offset-white"
-                src={session.user.image.replace("_normal", "")}
-                alt=""
-              />
+              {stabilityImage ? (
+                <MediaRenderer
+                  src={stabilityImage}
+                  alt="image"
+                  className="inline-block h-40 w-40 rounded-full bg-white ring-2 ring-pink-500 ring-offset-2 ring-offset-white"
+                />
+              ) : (
+                <img
+                  className="inline-block h-40 w-40 rounded-full bg-white ring-2 ring-pink-500 ring-offset-2 ring-offset-white"
+                  src={session.user.image.replace("_normal", "")}
+                  alt=""
+                />
+              )}
             </div>
           ) : (
             <div className="w-full items-center py-8">
@@ -280,11 +308,23 @@ const Home: NextPage = () => {
             </div>
           ) : (
             <div className="w-full items-center py-8">
-              <img
-                className="mask mask-hexagon inline-block h-40 w-40"
-                src="/unknown.jpg"
-                alt=""
-              />
+              {stabilityImage ? (
+                <div className="mask mask-hexagon h-42 w-42 bg-white">
+                  <MediaRenderer
+                    src={stabilityImage}
+                    alt="image"
+                    className="mask mask-hexagon inline-block h-40 w-40"
+                  />
+                </div>
+              ) : (
+                <div className="mask mask-hexagon h-42 w-42 bg-white">
+                  <img
+                    className="mask mask-hexagon inline-block h-40 w-40"
+                    src="/unknown.jpg"
+                    alt=""
+                  />
+                </div>
+              )}
             </div>
           )}
           <Username />
@@ -304,43 +344,6 @@ const Home: NextPage = () => {
     );
   };
 
-  const StabilityComp = () => {
-    return (
-      <div className="mx-auto flex flex-col gap-2 pt-16">
-        <div className="pb-6">
-          <span className="text-sm text-slate-500">
-            What if I do NOT want to use my picture?
-          </span>
-          <h3 className="bg-gradient-to-br from-blue-500 to-green-300 bg-clip-text text-lg font-bold  tracking-tight text-transparent">
-            Generate one with AI
-          </h3>
-          <span className="text-slate-300">
-            Describe your ideal picture as precisely as possible. 
-          </span>
-        </div>
-        <input
-          className="block w-full rounded-full border border-slate-700 bg-neutral-dark px-6 py-4 shadow-sm placeholder:italic placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-pink-500 sm:text-sm"
-          placeholder="portrait ironman futuristic mars ski goggles cigar"
-          type="text"
-          name="search"
-          onChange={(e) => setPrompt(e.target.value)}
-        />
-        <div className="pt-6">
-          <StyledButton
-            callback={mintWithSignature}
-            icon="convert"
-            isDisabled={true}
-          >
-            Generate
-          </StyledButton>
-        </div>
-        <span className="text-sm text-slate-500">
-          *Sign out and sign in again to use your Twitter pic again.
-        </span>
-      </div>
-    );
-  };
-
   return (
     <>
       {/* Header */}
@@ -354,7 +357,40 @@ const Home: NextPage = () => {
             <PreProfile />
             <PostProfile />
           </div>
-          <StabilityComp />
+          <div className="mx-auto flex flex-col gap-2 pt-16">
+            <div className="pb-6">
+              <span className="text-sm text-slate-500">
+                What if I do NOT want to use my picture?
+              </span>
+              <h3 className="bg-gradient-to-br from-blue-500 to-green-300 bg-clip-text text-lg font-bold  tracking-tight text-transparent">
+                Generate one with AI
+              </h3>
+              <span className="text-slate-300">
+                Describe your ideal picture as precisely as possible. 
+              </span>
+            </div>
+            <input
+              key="prompt"
+              className="block w-full rounded-full border border-slate-700 bg-neutral-dark px-6 py-4 shadow-sm placeholder:italic placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-pink-500 sm:text-sm"
+              placeholder="lens flare, studio quality, futuristic, mars, ski goggles, sharp focus, galactic powerful suit, elegant, 4K, cinematic, dramatic atmosphere"
+              type="text"
+              name="search"
+              onChange={(e) => setPrompt(e.target.value)}
+              value={prompt}
+            />
+            <div className="pt-6">
+              <StyledButton
+                callback={generatePic}
+                icon="convert"
+                isDisabled={session ? false : true}
+              >
+                Generate
+              </StyledButton>
+            </div>
+            <span className="text-sm text-slate-500">
+              *Sign out and sign in again to use your Twitter pic again.
+            </span>
+          </div>
         </div>
       </div>
     </>
