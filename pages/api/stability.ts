@@ -19,6 +19,7 @@ export default async function server(
       const api = generate({
         prompt: prompt,
         apiKey: process.env.DREAMSTUDIO_API_KEY,
+        outDir: "/tmp/",
       });
       api.on("image", ({ buffer, filePath }) => {
         console.log("Image", buffer, filePath);
