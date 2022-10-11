@@ -19,16 +19,9 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import StyledButton from "../components/button/StyledButton";
 import { DESIRED_CHAIN_ID } from "../utils/constants";
+import { getBuffer } from "../utils/utils";
 
 type NftData = { id: string; metadataOwner: NFTMetadataOwner };
-
-function getBuffer(url: string) {
-  return axios
-    .get(url, {
-      responseType: "arraybuffer",
-    })
-    .then((response: any) => Buffer.from(response.data, "binary"));
-}
 
 const Home: NextPage = () => {
   // Helpful thirdweb hooks to connect and manage the wallet from metamask.
@@ -41,6 +34,7 @@ const Home: NextPage = () => {
   const [isMinted, setIsMinted] = useState(false);
   const [nftData, setNftData] = useState<NftData>();
   const [isMinting, setIsMinting] = useState(false);
+  const [prompt, setPrompt] = useState("");
 
   // Fetch the NFT collection from thirdweb via it's contract address.
   const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_NFT_COLLECTION_ADDRESS;
@@ -96,9 +90,9 @@ const Home: NextPage = () => {
 
       // Upload image to IPFS using the sdk.storage
       const originalImage = session.user.image.replace("_normal", "");
-      const imageData = await getBuffer(originalImage);
+      const imageBuffer = await getBuffer(originalImage);
       const tw = new ThirdwebSDK(signer);
-      const url = await tw.storage.upload(new File([imageData], "image"));
+      const url = await tw.storage.upload(new File([imageBuffer], "image"));
 
       // Make a request to /api/server
       const signedPayloadReq = await fetch(`/api/server`, {
@@ -145,13 +139,22 @@ const Home: NextPage = () => {
     }
   };
 
-  async function signInWithTwitter() {
-    signIn();
-  }
+  const generatePic = async () => {
+    const signedPayloadReq = await fetch(`/api/stability`, {
+      method: "POST",
+      body: JSON.stringify({
+        prompt: prompt,
+      }),
+    });
+  };
 
-  async function signOutWithTwitter() {
+  const signInWithTwitter = async () => {
+    signIn();
+  };
+
+  const signOutWithTwitter = async () => {
     signOut();
-  }
+  };
 
   async function openOpensea() {
     const URL = `https://opensea.io/assets/matic/${CONTRACT_ADDRESS}/${nftData?.id}`;
@@ -337,6 +340,38 @@ const Home: NextPage = () => {
                 <PostProfile />
               </div>
             </div>
+          </div>
+          <div className="mx-auto flex flex-col gap-2 pt-16">
+            <div className="pb-6">
+              <span className="text-sm text-slate-500">
+                What if I do NOT want to use my picture?
+              </span>
+              <h3 className="bg-gradient-to-br from-blue-500 to-green-300 bg-clip-text text-lg font-bold  tracking-tight text-transparent">
+                Generate one with AI
+              </h3>
+              <span className="text-slate-300">
+                Describe your ideal picture as precisely as possible. 
+              </span>
+            </div>
+            <input
+              className="block w-full rounded-full border border-slate-700 bg-neutral-dark px-6 py-4 shadow-sm placeholder:italic placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-pink-500 sm:text-sm"
+              placeholder="portrait ironman futuristic mars ski goggles cigar"
+              type="text"
+              name="search"
+              onChange={(e) => setPrompt(e.target.value)}
+            />
+            <div className="pt-6">
+              <StyledButton
+                callback={mintWithSignature}
+                icon="convert"
+                isDisabled={true}
+              >
+                Generate
+              </StyledButton>
+            </div>
+            <span className="text-sm text-slate-500">
+              *Sign out and sign in again to use your Twitter pic again.
+            </span>
           </div>
         </div>
       </div>
