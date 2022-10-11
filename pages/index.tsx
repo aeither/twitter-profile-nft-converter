@@ -95,7 +95,8 @@ const Home: NextPage = () => {
       }
 
       // Upload image to IPFS using the sdk.storage
-      const imageData = await getBuffer(session.user.image);
+      const originalImage = session.user.image.replace("_normal", "");
+      const imageData = await getBuffer(originalImage);
       const tw = new ThirdwebSDK(signer);
       const url = await tw.storage.upload(new File([imageData], "image"));
 
@@ -228,7 +229,7 @@ const Home: NextPage = () => {
           <div className="w-full items-center py-8">
             <img
               className="inline-block h-40 w-40 rounded-full ring-2 ring-pink-500 ring-offset-2 ring-offset-white"
-              src={session.user.image}
+              src={session.user.image.replace("_normal", "")}
               alt=""
             />
           </div>
@@ -320,9 +321,12 @@ const Home: NextPage = () => {
       </nav>
 
       {/* Content */}
-      <div className="h-[100vh] w-[100vw] bg-neutral-medium pt-16">
-        <div className="mx-auto flex h-full max-w-7xl items-center justify-center  p-16 py-12 px-4 sm:px-6">
-          <div className="flex flex-row gap-2 bg-connect-animation bg-[length:70%_30%] bg-center bg-no-repeat md:gap-36">
+      <div className="w-[100vw] bg-neutral-medium pt-16">
+        <div className="mx-auto flex h-full max-w-7xl flex-col items-center justify-center  p-16 py-12 px-4 sm:px-6">
+          <div className="flex h-full w-full flex-col items-center pb-8">
+            <div className="h-36 w-full rounded-lg bg-[url('/twitter-banner.jpg')] bg-cover md:w-1/2" />
+          </div>
+          <div className="flex flex-row gap-2 bg-connect-animation bg-[length:70%_30%] bg-center bg-no-repeat sm:gap-16 md:gap-36">
             <div className="flex flex-shrink-0">
               <div className="flex flex-col">
                 <PreProfile />
